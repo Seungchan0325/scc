@@ -26,6 +26,7 @@ void setDefaultSpecifier(A_SPECIFIER *p);
 A_SPECIFIER *updateSpecifier(A_SPECIFIER *p, A_TYPE *t, S_KIND s);
 A_ID *linkDeclaratorList(A_ID *id1, A_ID *id2);
 A_ID *getIdentifierDeclared(char *s);
+A_ID *getTypeIdentifier(A_TYPE* t);
 A_TYPE *getTypeOfStructOrEnumRefIdentifier(T_KIND k, char *s, ID_KIND kk);
 A_NODE *setNodeInteger(A_NODE* node, int i);
 A_NODE *setNodeFloat(A_NODE* node, float f);

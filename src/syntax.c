@@ -200,6 +200,19 @@ A_ID *getIdentifierDeclared(char *s)
     return id;
 }
 
+A_ID *getTypeIdentifier(A_TYPE* t)
+{
+    A_ID *id;
+    id = current_id;
+    while(id) {
+        if(id->type == t) {
+            return id;
+        }
+        id = id->prev;
+    }
+    return NULL;
+}
+
 A_TYPE *getTypeOfStructOrEnumRefIdentifier(T_KIND k, char *s, ID_KIND kk)
 {
     A_TYPE *t;

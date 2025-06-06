@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 
 #include "common.h"
 #include "type.h"
@@ -445,5 +446,456 @@ void prt_A_ID(A_ID *id, int s)
             prt_expression(id->init, s+2);
         else
             prt_initializer(id->init, s+2);
+    }
+}
+
+void print_tab(int s)
+{
+    while(s--) {
+        printf("  ");
+    }
+}
+
+void printProgram(A_NODE *node, int s)
+{
+    printA_ID_LIST(node->clink, s);
+}
+
+void printStatement(A_NODE *node, int s)
+{
+    assert(node != NULL);
+    switch (node->name)
+    {
+    case N_STMT_LABEL_CASE:
+        print_tab(s);
+        printf("case ");
+        printExpression(node->llink);
+        printf(" : \n");
+        printStatement(node->rlink, s+1);
+        break;
+    case N_STMT_LABEL_DEFAULT:
+        print_tab(s);
+        printf("default : \n ");
+        printStatement(node->clink, s+1);
+        break;
+    case N_STMT_COMPOUND:
+        print_tab(s);
+        printf("{\n ");
+        if(node->llink)
+            printA_ID_LIST(node->llink, s);
+        printStatement_list(node->rlink, s);
+        print_tab(s);
+        printf("}\n ");
+        break;
+    case N_STMT_EMPTY:
+        print_tab(s);
+        printf(";\n ");
+        break;
+    case N_STMT_EXPRESSION:
+        print_tab(s);
+        printExpression(node->clink);
+        printf(";\n ");
+        break;
+    case N_STMT_IF_ELSE:
+        print_tab(s);
+        printf("if ( ");
+        printExpression(node->llink);
+        printf(")\n");
+        printStatement(node->clink, s+1);
+        print_tab(s);
+        printf("else\n ");
+        printStatement(node->rlink, s+1);
+        break;
+    case N_STMT_IF:
+        print_tab(s);
+        printf("if (");
+        printExpression(node->llink);
+        printf(")\n");
+        printStatement(node->rlink, s+1);
+        break;
+    case N_STMT_SWITCH:
+        print_tab(s);
+        printf("switch (");
+        printExpression(node->llink);
+        printf(")");
+        printStatement(node->rlink, s+1);
+        break;
+    case N_STMT_WHILE:
+        print_tab(s);
+        printf("while ( ");
+        printExpression(node->llink);
+        printf(" )");
+        printStatement(node->rlink, s+1);
+        break;
+    case N_STMT_DO:
+        print_tab(s);
+        printf("do ");
+        printStatement(node->llink, s+1);
+        print_tab(s);
+        printf("while (");
+        printExpression(node->rlink);
+        printf(");\n");
+        break;
+    case N_STMT_FOR:
+        print_tab(s);
+        printf("for ( ");
+        printFor_expression(node->llink);
+        printf(" )\n");
+        printStatement(node->rlink, s+1);
+        break;
+    case N_STMT_CONTINUE:
+        print_tab(s);
+        printf("continue; \n ");
+        break;
+    case N_STMT_BREAK:
+        print_tab(s);
+        printf("break; \n ");
+        break;
+    case N_STMT_RETURN:
+        print_tab(s);
+        printf("return ");
+        if(node->clink)
+            printExpression(node->clink);
+        printf("; \n ");
+        break;
+    default:
+        printf("***syntax tree error***\n");
+        break;
+    }
+}
+
+void printStatement_list(A_NODE *node, int s)
+{
+    switch(node->name) {
+        case N_STMT_LIST:
+            printStatement(node->llink, s);
+            printStatement_list(node->rlink, s);
+            break;
+        case N_STMT_LIST_NIL:
+            break;
+        default:
+            printf("***syntax tree error***");
+    }
+}
+
+void printExpression(A_NODE *node)
+{
+    switch(node->name) {
+        case N_EXP_IDENT:
+            printf("%s", ((A_ID*)(node->clink))->name);
+            break;
+        case N_EXP_INT_CONST:
+            printf("%d", node->value.i);
+            break;
+        case N_EXP_FLOAT_CONST:
+            printf("%f", node->value.f);
+            break;
+        case N_EXP_CHAR_CONST:
+            printf("'%c'", node->value.c);
+            break;
+        case N_EXP_STRING_LITERAL:
+            printf("\"%s\"", node->value.s);
+            break;
+        case N_EXP_ARRAY:
+            printf("(");
+            printExpression(node->llink);
+            printf(")[");
+            printExpression(node->rlink);
+            printf("]");
+            break;
+        case N_EXP_FUNCTION_CALL:
+            printf("(");
+            printExpression(node->llink);
+            printf(")(");
+            printArg_expr_list(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_STRUCT:
+            printf("(");
+            printExpression(node->llink);
+            printf(").%s", (char*)node->rlink);
+            break;
+        case N_EXP_ARROW:
+            printf("(");
+            printExpression(node->llink);
+            printf(")->%s", (char*)node->rlink);
+            break;
+        case N_EXP_POST_INC:
+            printf("(");
+            printExpression(node->clink);
+            printf(")++");
+            break;
+        case N_EXP_POST_DEC:
+            printf("(");
+            printExpression(node->clink);
+            printf(")--");
+            break;
+        case N_EXP_PRE_INC:
+            printf("++(");
+            printExpression(node->clink);
+            printf(")");
+            break;
+        case N_EXP_PRE_DEC:
+            printf("--(");
+            printExpression(node->clink);
+            printf(")");
+            break;
+        case N_EXP_AMP:
+            printf("&(");
+            printExpression(node->clink);
+            printf(")");
+            break;
+        case N_EXP_STAR:
+            printf("*(");
+            printExpression(node->clink);
+            printf(")");
+            break;
+        case N_EXP_NOT:
+            printf("!(");
+            printExpression(node->clink);
+            printf(")");
+            break;
+        case N_EXP_PLUS:
+            printf("+(");
+            printExpression(node->clink);
+            printf(")");
+            break;
+        case N_EXP_MINUS:
+            printf("-(");
+            printExpression(node->clink);
+            printf(")");
+            break;
+        case N_EXP_SIZE_EXP:
+            printf("sizeof (");
+            printExpression(node->clink);
+            printf(")");
+            break;
+        case N_EXP_SIZE_TYPE:
+            printf("sizeof (");
+            printExpression(node->clink);
+            printf(")");
+            break;
+        case N_EXP_CAST:
+            printf("(");
+            printA_TYPE(node->llink);
+            printf(")");
+            printf("(");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_MUL:
+            printf("(");
+            printExpression(node->llink);
+            printf(") * (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_DIV:
+            printf("(");
+            printExpression(node->llink);
+            printf(") / (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_MOD:
+            printf("(");
+            printExpression(node->llink);
+            printf(") %% (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_ADD:
+            printf("(");
+            printExpression(node->llink);
+            printf(") + (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_SUB:
+            printf("(");
+            printExpression(node->llink);
+            printf(") - (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_LSS:
+            printf("(");
+            printExpression(node->llink);
+            printf(") < (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_GTR:
+            printf("(");
+            printExpression(node->llink);
+            printf(") > (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_LEQ:
+            printf("(");
+            printExpression(node->llink);
+            printf(") <= (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_GEQ:
+            printf("(");
+            printExpression(node->llink);
+            printf(") >= (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_NEQ:
+            printf("(");
+            printExpression(node->llink);
+            printf(") != (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_EQL:
+            printf("(");
+            printExpression(node->llink);
+            printf(") == (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_AND:
+            printf("(");
+            printExpression(node->llink);
+            printf(") && (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_OR:
+            printf("(");
+            printExpression(node->llink);
+            printf(") || (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        case N_EXP_ASSIGN:
+            printf("(");
+            printExpression(node->llink);
+            printf(") = (");
+            printExpression(node->rlink);
+            printf(")");
+            break;
+        default:
+            printf("***syntax tree error***");
+            break;
+    }
+}
+
+void printA_ID_LIST(A_ID *id_list, int s)
+{
+    A_ID *id = id_list;
+    while(id) {
+        printA_ID(id, s);
+        id = id->link;
+    }
+}
+
+void printA_ID(A_ID *id, int s)
+{
+    switch(id->kind) {
+        case ID_NULL:
+            break;
+        case ID_VAR:
+            printA_TYPE(id->type);
+            printf(" %s", id->name);
+            if(id->init) {
+                printf(" = ");
+                printExpression(id->init);
+            }
+            printf(";\n");
+            break;
+        case ID_FUNC:
+            printA_TYPE(id->type->element_type);
+            printf(" %s", id->name);
+            if(id->type->expr)
+                printStatement(id->type->expr, s+1);
+            break;
+        case ID_PARM:
+            printf("%s", id->name);
+            break;
+        case ID_FIELD:
+            printf("%s", id->name);
+            break;
+        case ID_TYPE:
+            printf("%s", id->name);
+            break;
+        case ID_ENUM:
+            printf("%s", id->name);
+            break;
+        case ID_STRUCT:
+            break;
+            printf("%s", id->name);
+        case ID_ENUM_LITERAL:
+            printf("%s", id->name);
+            break;
+    }
+}
+
+void printA_TYPE(A_TYPE *type)
+{
+    A_ID* id = getTypeIdentifier(type);
+    if(id == NULL) {
+        printf("***syntax tree error***\n");
+        return;
+    }
+    switch(id->kind) {
+        case ID_TYPE:
+            printf("%s", id->name);
+            break;
+        case ID_ENUM:
+            printf("enum %s", id->name);
+            break;
+        case ID_STRUCT:
+            printf("struct %s", id->name);
+            break;
+        default:
+            printf("***syntax tree error***\n");
+            break;
+    }
+}
+
+void printArg_expr_list(A_NODE *node)
+{
+    switch(node->name) {
+        case N_ARG_LIST:
+            printExpression(node->llink);
+            if(((A_NODE*)(node->rlink))->name == N_ARG_LIST)
+                printf(", ");
+            printArg_expr_list(node->rlink);
+            break;
+        case N_ARG_LIST_NIL:
+            break;
+        default:
+            printf("***syntax tree error***\n");
+    }
+}
+
+void printIntializer(A_NODE *node)
+{
+
+}
+
+void printFor_expression(A_NODE *node)
+{
+    switch(node->name) {
+        case N_FOR_EXP:
+            if(node->llink)
+                printExpression(node->llink);
+            printf("; ");
+            if(node->clink)
+                printExpression(node->clink);
+            printf("; ");
+            if(node->rlink)
+                printExpression(node->rlink);
+            break;
+        default:
+            printf("***syntax tree error***\n");
+            break;
     }
 }

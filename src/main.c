@@ -20,5 +20,6 @@ int main()
     yyparse();
     if(syntax_err) return 1;
     print_ast(root);
-    return 0;    
+    // printProgram(root, 0);
+    return 0;
 }
