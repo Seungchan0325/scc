@@ -5,6 +5,7 @@
 #include "type.h"
 #include "syntax.h"
 #include "printAST.h"
+#include "semantic.h"
 
 FILE *fout;
 
@@ -19,6 +20,7 @@ int main()
     initialize();
     yyparse();
     if(syntax_err) return 1;
+    semantic_analysis(root);
     print_ast(root);
     // printProgram(root, 0);
     return 0;

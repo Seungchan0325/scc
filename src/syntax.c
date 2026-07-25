@@ -478,7 +478,10 @@ bool isNotSameType(A_TYPE *t1, A_TYPE *t2)
 
 bool isPointerOrArrayType(A_TYPE *t)
 {
-    return t->kind == T_ARRAY || t->kind == T_POINTER;
+    if(t && (t->kind == T_POINTER || t->kind == T_ARRAY))
+        return true;
+    else
+        return false;
 }
 
 void initialize()

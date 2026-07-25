@@ -128,6 +128,7 @@ typedef union {
     int i;
     float f;
     char *s;
+    char c;
 } LIT_VALUE;
 
 typedef struct lit {

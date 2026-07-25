@@ -14,12 +14,13 @@ YACC_H = $(BUILDDIR)/y.tab.h
 LEX_SRC = $(SRCDIR)/lexer.l
 LEX_C = $(BUILDDIR)/lex.yy.c
 
-SRC = $(SRCDIR)/main.c $(SRCDIR)/syntax.c $(SRCDIR)/printAST.c
+SRC = $(SRCDIR)/main.c $(SRCDIR)/syntax.c $(SRCDIR)/printAST.c $(SRCDIR)/semantic.c
 OBJ = $(BUILDDIR)/main.o \
 	$(BUILDDIR)/syntax.o \
 	$(BUILDDIR)/printAST.o \
 	$(BUILDDIR)/y.tab.o \
-	$(BUILDDIR)/lexer.o
+	$(BUILDDIR)/lexer.o \
+	$(BUILDDIR)/semantic.o
 
 .PHONY: all clean directories
 
